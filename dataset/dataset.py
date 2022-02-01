@@ -28,7 +28,7 @@ class SemData(Dataset):
         self.data = None
 
         for seq in SEQ[self.split]:
-            path = f'./dataset/{seq}'
+            path = f'./dataset/simplified/{seq}'
             xyz, remission, labels = np.load(f'{path}/xyz.npy'), np.load(f'{path}/remission.npy'), np.load(f'{path}/labels.npy')
             
             xyz = xyz[:, :, :, 1:]

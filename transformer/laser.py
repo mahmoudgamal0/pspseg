@@ -294,7 +294,7 @@ def scan_label_file(seq, index):
 
 def transform(sequence):
   num_files = len(os.listdir(f'/media/kitti/dataset/sequences/{sequence}/velodyne'))
-  scan = SemLaserScan(nclasses, color_dict, DATA=CFG, H=33, W=513, fov_up=1.5, fov_down=-12.5, project=True)
+  scan = SemLaserScan(nclasses, color_dict, DATA=KITTI_CFG, H=33, W=513, fov_up=1.5, fov_down=-12.5, project=True)
   
   scans_xyz, scans_range, scans_remission, labels = [], [], [], []
 
@@ -305,7 +305,7 @@ def transform(sequence):
     scans_xyz.append(scan.proj_xyz)
     scans_remission.append(scan.proj_remission)
     scans_range.append(scan.proj_range)
-    # labels.append(scan.proj_sem_label)
+    labels.append(scan.proj_sem_label)
   
   np.save(f'{path}/xyz', scans_xyz)
   np.save(f'{path}/remission', scans_remission)
@@ -313,12 +313,13 @@ def transform(sequence):
   # np.save(f'{path}/labels', labels)
 
 if __name__ == "__main__":
-    CFG = yaml.safe_load(open('./config/kitti.yaml', 'r'))
-    color_dict = CFG["color_map"]
-    nclasses = len(color_dict)
+    KITTI_CFG = yaml.safe_load(open('./config/kitti_simp.yaml', 'r'))
+    learning_map = np.unique(list(KITTI_CFG['learning_map'].values()))
+    nclasses = learning_map.size
+    color_dict = KITTI_CFG["color_map"]
     
-    for sequence in ['17', '18', '19', '20', '21']:
-      path = f'./dataset/{sequence}'
+    for sequence in ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21']:
+      path = f'./dataset/simplified/{sequence}'
       if not os.path.exists(path): 
         os.makedirs(path)
       transform(sequence)

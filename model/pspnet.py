@@ -102,7 +102,7 @@ class PSPNet(nn.Module):
             aux_loss = self.criterion(aux, y)
             return x.max(1)[1], main_loss, aux_loss
         else:
-            return x.max(1)[1]
+            return x
 
 
 if __name__ == '__main__':

@@ -23,11 +23,10 @@ from util.util import AverageMeter, poly_learning_rate, intersectionAndUnionGPU
 device = torch.device('cuda:0')
 torch.cuda.set_device(0)
 
-KITTI_CFG = yaml.safe_load(open('./config/kitti.yaml', 'r'))
+KITTI_CFG = yaml.safe_load(open('./config/kitti_simp.yaml', 'r'))
 CFG = yaml.safe_load(open('./config/config.yaml', 'r'))
 TRAIN_CFG = CFG['TRAIN']
 
-color_dict = KITTI_CFG["color_map"]
 learning_map = np.unique(list(KITTI_CFG['learning_map'].values()))
 nclasses = learning_map.size
 

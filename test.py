@@ -49,7 +49,7 @@ model = PSPNet(layers=50, classes=nclasses, pretrained=False)
 model = torch.nn.DataParallel(model.to(device))
 cudnn.benchmark = True
 
-model_path = "./accepted/psp_xyr.pth"
+model_path = "./accepted/psp_xydepth.pth"
 logger.info("=> loading checkpoint '{}'".format(model_path))
 checkpoint = torch.load(model_path)
 model.load_state_dict(checkpoint['state_dict'], strict=False)
@@ -67,6 +67,7 @@ def test(test_loader, model, classes):
           input = input.to(device)
           target = target.to(device)
           output = model(input)
+          output = output.max(1)[1]
           intersection, union, target = intersectionAndUnion(output.cpu().numpy(), target.cpu().numpy(), nclasses, ignore_index=0)
           intersection_meter.update(intersection)
           union_meter.update(union)
