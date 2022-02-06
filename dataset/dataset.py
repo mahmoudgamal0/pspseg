@@ -10,8 +10,9 @@ SEQ = {
 }
 
 class SemData(Dataset):
-    def __init__(self, split='TRAIN'):
+    def __init__(self, split='TRAIN', shuffle=True):
         self.split = split
+        self.shuffle = shuffle
         self.data = []
         self.make_dataset()
 
@@ -22,6 +23,8 @@ class SemData(Dataset):
         image = self.data[index][:, :, :3]
         image = np.moveaxis(image, -1, 0)
         label = self.data[index][:, :, -1]
+        if self.split == 'REST':
+            label = np.zeros((33, 513))
         return torch.from_numpy(image).float(), torch.from_numpy(label)
 
     def make_dataset(self):
@@ -29,17 +32,25 @@ class SemData(Dataset):
 
         for seq in SEQ[self.split]:
             path = f'./dataset/simplified/{seq}'
-            xyz, remission, labels = np.load(f'{path}/xyz.npy'), np.load(f'{path}/remission.npy'), np.load(f'{path}/labels.npy')
+            if self.split == 'REST':
+                xyz, extra = np.load(f'{path}/xyz.npy'), np.load(f'{path}/range.npy')
+            else:
+                xyz, extra, labels = np.load(f'{path}/xyz.npy'), np.load(f'{path}/range.npy'), np.load(f'{path}/labels.npy')
             
             xyz = xyz[:, :, :, 1:]
-            remission = np.expand_dims(remission, axis=3)
-            labels = np.expand_dims(labels, axis=3)
+            extra = np.expand_dims(extra, axis=3)
 
-            concated = np.concatenate([xyz, remission, labels], axis=3)
+            if self.split == 'REST':
+                concated = np.concatenate([xyz, extra], axis=3)
+            else:
+                labels = np.expand_dims(labels, axis=3)
+                concated = np.concatenate([xyz, extra, labels], axis=3)
+
             if self.data is None:
                 self.data = concated
             else:
                 self.data = np.append(self.data, concated, axis=0)
         
-        np.random.shuffle(self.data)
+        if self.shuffle:
+            np.random.shuffle(self.data)
         print(f"Loaded {self.data.shape[0]} samples")

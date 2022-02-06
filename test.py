@@ -16,7 +16,7 @@ from util.util import AverageMeter, intersectionAndUnion
 device = torch.device('cuda:0')
 torch.cuda.set_device(0)
 
-KITTI_CFG = yaml.safe_load(open('./config/kitti.yaml', 'r'))
+KITTI_CFG = yaml.safe_load(open('./config/kitti_simp.yaml', 'r'))
 CFG = yaml.safe_load(open('./config/config.yaml', 'r'))
 TEST_CFG = CFG['TEST']
 
@@ -41,7 +41,7 @@ logger.info("=> creating model ...")
 logger.info("Classes: {}".format(nclasses))
 
 
-test_data = SemData(split='TEST')
+test_data = SemData(split='REST', shuffle=False)
 test_loader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False, pin_memory=True)
 from model.pspnet import PSPNet
 model = PSPNet(layers=50, classes=nclasses, pretrained=False)
@@ -49,7 +49,7 @@ model = PSPNet(layers=50, classes=nclasses, pretrained=False)
 model = torch.nn.DataParallel(model.to(device))
 cudnn.benchmark = True
 
-model_path = "./accepted/psp_xydepth.pth"
+model_path = "./accepted/psp_xyd_5.pth"
 logger.info("=> loading checkpoint '{}'".format(model_path))
 checkpoint = torch.load(model_path)
 model.load_state_dict(checkpoint['state_dict'], strict=False)
@@ -87,4 +87,19 @@ def test(test_loader, model, classes):
 
     logger.info('<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<')
 
-test(test_loader, model, nclasses)
+
+def predict():
+    model.eval()
+    outputs = []
+    for i, (input, target) in enumerate(test_loader):
+        with torch.no_grad():
+            input = input.to(device)
+            target = target.to(device)
+            output = model(input)
+            output = output.max(1)[1]
+            outputs.append(output.cpu().numpy())
+    
+    return outputs
+
+if __name__ == '__main__':
+    test(test_loader, model, nclasses)

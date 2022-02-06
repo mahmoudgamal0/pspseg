@@ -198,6 +198,11 @@ class SemLaserScan(LaserScan):
     self.remap_lut = np.zeros((maxkey + 100), dtype=np.int32)
     self.remap_lut[list(class_remap.keys())] = list(class_remap.values())
 
+    class_inv_remap = DATA["learning_map_inv"]
+    maxkey = max(class_inv_remap.keys())
+    self.inv_remap_lut = np.zeros((maxkey+1), dtype=np.int32)
+    self.inv_remap_lut[list(class_inv_remap.keys())] = list(class_inv_remap.values())
+
   def reset(self):
     """ Reset scan members. """
     super(SemLaserScan, self).reset()
@@ -264,7 +269,7 @@ class SemLaserScan(LaserScan):
     if self.project:
       self.do_label_projection()
 
-  def colorize(self):
+  def colorize(self, from_model=False):
     """ Colorize pointcloud with the color of each semantic label
     """
     self.sem_label_color = self.sem_color_lut[self.sem_label]
@@ -272,6 +277,12 @@ class SemLaserScan(LaserScan):
 
     self.inst_label_color = self.inst_color_lut[self.inst_label]
     self.inst_label_color = self.inst_label_color.reshape((-1, 3))
+
+    if from_model:
+      self.proj_sem_color = np.squeeze(self.sem_color_lut[self.sem_label], axis=0)
+  
+  def inverse_map(self):
+    self.sem_label = self.inv_remap_lut[self.proj_sem_label]
 
   def do_label_projection(self):
     # only map colors to labels that exist
